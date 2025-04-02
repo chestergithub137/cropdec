@@ -7,16 +7,6 @@ import os
 import base64
 from io import BytesIO
 from PIL import Image
-import logging
-
-# Configure TensorFlow for CPU only
-tf.config.set_visible_devices([], 'GPU')
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-tf.config.threading.set_inter_op_parallelism_threads(1)
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -29,23 +19,16 @@ def request_entity_too_large(error):
 
 # Load pre-trained model
 MODEL_PATH = "crop_disease_model.h5"
-try:
-    if not os.path.exists(MODEL_PATH):
-        logger.info("Downloading model file...")
-        tf.keras.utils.get_file(
-            "crop_disease_model.h5",
-            "https://github.com/AshishSalaskar1/Plant-Leaf-Disease-Detection/raw/master/model.h5",
-            cache_subdir=os.path.abspath("."), 
-            cache_dir=".",
-        )
-    
-    # Load the model with CPU configuration
-    logger.info("Loading model...")
-    model = load_model(MODEL_PATH, compile=False)
-    logger.info("Model loaded successfully")
-except Exception as e:
-    logger.error(f"Error loading model: {str(e)}")
-    raise
+if not os.path.exists(MODEL_PATH):
+    tf.keras.utils.get_file(
+        "crop_disease_model.h5",
+        "https://github.com/AshishSalaskar1/Plant-Leaf-Disease-Detection/raw/master/model.h5",
+        cache_subdir=os.path.abspath("."), 
+        cache_dir=".",
+    )
+
+# Load the model
+model = load_model(MODEL_PATH, compile=False)
 
 # Define class labels and descriptions (modify as per your dataset)
 class_labels = ["Healthy", "Leaf Spot", "Blight", "Powdery Mildew", "Rust"]
